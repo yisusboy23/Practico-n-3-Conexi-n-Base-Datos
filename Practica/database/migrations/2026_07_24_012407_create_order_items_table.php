@@ -1,4 +1,3 @@
-// database/migrations/2026_07_01_000007_create_order_items_table.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -14,12 +13,12 @@ return new class extends Migration
             $table->foreignId('order_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->constrained()->onDelete('restrict');
             $table->integer('quantity');
-            $table->decimal('unit_price', 12, 2);
-            $table->decimal('subtotal', 12, 2);
+            $table->decimal('unit_price', 10, 2);
+            $table->decimal('subtotal', 10, 2);
             $table->timestamps();
             
             $table->index(['order_id', 'product_id']);
-            $table->index(['product_id']);
+            $table->index('product_id');
         });
     }
 

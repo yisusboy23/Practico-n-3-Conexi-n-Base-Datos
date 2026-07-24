@@ -1,4 +1,4 @@
-// database/migrations/2026_07_01_000006_create_orders_table.php
+// database/migrations/2026_07_01_000009_create_orders_table.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -11,30 +11,20 @@ return new class extends Migration
     {
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
-            $table->string('order_number', 50)->unique();
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
-            $table->foreignId('cart_id')->nullable()->constrained()->onDelete('set null');
-            $table->decimal('subtotal', 12, 2);
-            $table->decimal('tax', 12, 2)->default(0);
-            $table->decimal('shipping_cost', 12, 2)->default(0);
-            $table->decimal('discount', 12, 2)->default(0);
-            $table->decimal('total', 12, 2);
-            $table->enum('status', ['pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded'])->default('pending');
-            $table->string('payment_method', 50)->nullable();
-            $table->string('payment_reference', 100)->nullable();
-            $table->enum('payment_status', ['pending', 'paid', 'failed', 'refunded'])->default('pending');
-            $table->text('notes')->nullable();
-            $table->json('shipping_address');
-            $table->json('billing_address')->nullable();
-            $table->timestamp('paid_at')->nullable();
-            $table->timestamp('shipped_at')->nullable();
-            $table->timestamp('delivered_at')->nullable();
+            $table->foreignId('address_id')->constrained()->onDelete('restrict');
+            $table->string('order_number', 30)->unique();
+            $table->enum('status', ['pendiente', 'pagado', 'enviado', 'entregado', 'cancelado'])->default('pendiente');
+            $table->decimal('subtotal', 10, 2);
+            $table->decimal('tax', 10, 2)->default(0);
+            $table->decimal('shipping_cost', 10, 2)->default(0);
+            $table->decimal('total', 10, 2);
             $table->timestamps();
             
             $table->index(['user_id', 'status']);
-            $table->index(['order_number']);
-            $table->index(['status', 'payment_status']);
-            $table->index(['created_at']);
+            $table->index('order_number');
+            $table->index('status');
+            $table->index('created_at');
         });
     }
 

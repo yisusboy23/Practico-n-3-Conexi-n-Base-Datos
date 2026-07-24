@@ -7,6 +7,34 @@ use Illuminate\Database\Eloquent\Model;
 
 class Category extends Model
 {
-    /** @use HasFactory<\Database\Factories\CategoryFactory> */
     use HasFactory;
+
+    protected $fillable = [
+        'parent_id', 'name', 'slug'
+    ];
+
+    // Relaciones
+    public function parent()
+    {
+        return $this->belongsTo(Category::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
+
+    // Accessor para obtener ruta completa
+    public function getFullPathAttribute()
+    {
+        if ($this->parent) {
+            return $this->parent->full_path . ' > ' . $this->name;
+        }
+        return $this->name;
+    }
 }

@@ -1,4 +1,4 @@
-// database/migrations/2026_07_01_000005_create_cart_items_table.php
+// database/migrations/2026_07_01_000008_create_cart_items_table.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -13,13 +13,14 @@ return new class extends Migration
             $table->id();
             $table->foreignId('cart_id')->constrained()->onDelete('cascade');
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->integer('quantity')->default(1);
-            $table->decimal('unit_price', 12, 2);
-            $table->decimal('subtotal', 12, 2);
+            $table->integer('quantity');
+            $table->decimal('unit_price', 10, 2);
             $table->timestamps();
             
+            // Un único producto por carrito (regla de negocio)
             $table->unique(['cart_id', 'product_id']);
-            $table->index(['product_id']);
+            $table->index(['cart_id', 'product_id']);
+            
         });
     }
 

@@ -1,4 +1,4 @@
-// database/migrations/2026_07_01_000004_create_carts_table.php
+// database/migrations/2026_07_01_000007_create_carts_table.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;
@@ -11,16 +11,14 @@ return new class extends Migration
     {
         Schema::create('carts', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('session_id', 100)->nullable();
-            $table->enum('status', ['active', 'abandoned', 'converted'])->default('active');
-            $table->decimal('total', 12, 2)->default(0);
-            $table->timestamp('last_activity_at')->nullable();
+            $table->enum('status', ['activo', 'convertido', 'abandonado'])->default('activo');
             $table->timestamps();
             
-            $table->index(['user_id', 'status']);
-            $table->index(['session_id']);
-            $table->unique(['user_id', 'status'])->where('status', 'active');
+            $table->index('user_id');
+            $table->index('session_id');
+            $table->index('status');
         });
     }
 
