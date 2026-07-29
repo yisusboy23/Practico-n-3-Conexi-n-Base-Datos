@@ -29,9 +29,6 @@ return new class extends Migration
             $table->index('sku');
             $table->index('slug');
             
-            // Check constraints (MySQL 8.0+ or using DB::statement)
-            // $table->check('price >= 0');
-            // $table->check('stock >= 0');
         });
         
         // Agregar check constraints usando DB::statement para compatibilidad
