@@ -9,10 +9,11 @@ use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    // Listar todo (GET /categories)
     public function index()
     {
-        return CategoryResource::collection(Category::all());
+        return CategoryResource::collection(
+            Category::paginate(15)
+        );
     }
 
     // Crear (POST /categories)

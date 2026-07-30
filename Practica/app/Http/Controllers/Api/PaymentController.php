@@ -11,7 +11,9 @@ class PaymentController extends Controller
 {
     public function index()
     {
-        return PaymentResource::collection(Payment::all());
+        return PaymentResource::collection(
+            Payment::paginate(15)
+        );
     }
 
     public function store(Request $request)

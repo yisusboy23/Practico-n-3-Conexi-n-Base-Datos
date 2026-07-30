@@ -9,10 +9,11 @@ use Illuminate\Http\Request;
 
 class BrandController extends Controller
 {
-    // Listar todas las marcas
     public function index()
     {
-        return BrandResource::collection(Brand::all());
+        return BrandResource::collection(
+            Brand::paginate(15)
+        );
     }
 
     // Crear una nueva marca

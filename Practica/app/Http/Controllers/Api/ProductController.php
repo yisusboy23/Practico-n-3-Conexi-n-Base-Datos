@@ -9,11 +9,33 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // Paginado con relaciones precargadas para mejor rendimiento
-        $products = Product::with(['category', 'brand', 'images'])->paginate(15);
-        return ProductResource::collection($products);
+        $query = Product::with(['category', 'brand', 'images']);
+
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->filled('category_id')) {
+            $query->where('category_id', $request->category_id);
+        }
+
+        if ($request->filled('brand_id')) {
+            $query->where('brand_id', $request->brand_id);
+        }
+
+        if ($request->filled('min_price')) {
+            $query->where('price', '>=', $request->min_price);
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('price', '<=', $request->max_price);
+        }
+
+        return ProductResource::collection(
+            $query->paginate(15)
+        );
     }
 
     public function store(Request $request)

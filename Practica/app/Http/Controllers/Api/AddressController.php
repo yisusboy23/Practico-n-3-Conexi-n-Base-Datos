@@ -11,7 +11,9 @@ class AddressController extends Controller
 {
     public function index()
     {
-        return AddressResource::collection(Address::all());
+        return AddressResource::collection(
+            Address::paginate(15)
+        );
     }
 
     public function store(Request $request)

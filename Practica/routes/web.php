@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\ProductImageController;
+use App\Http\Controllers\Api\CartItemController;
 
 
 Route::get('/', function () {
@@ -34,4 +35,6 @@ Route::prefix('api')->group(function () {
     Route::get('product-images/{productImage}', [ProductImageController::class, 'show']);
     Route::put('product-images/{productImage}', [ProductImageController::class, 'update']);
     Route::delete('product-images/{productImage}', [ProductImageController::class, 'destroy']);
+    Route::put('cart-items/{cartItem}', [CartItemController::class, 'update']);
+    Route::delete('cart-items/{cartItem}', [CartItemController::class, 'destroy']);
 });
