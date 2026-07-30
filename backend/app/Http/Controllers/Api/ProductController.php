@@ -34,7 +34,7 @@ class ProductController extends Controller
         }
 
         return ProductResource::collection(
-            $query->paginate(15)
+            $query->paginate(10)
         );
     }
 
