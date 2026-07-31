@@ -6,9 +6,21 @@ export default function CartView({ cartId, onCheckout }) {
     const { cart, loading, error, refetch } = useCart(cartId);
     const [updatingId, setUpdatingId] = useState(null);
 
+    console.log('🛒 CartView - cartId:', cartId);
+    console.log('🛒 CartView - cart:', cart);
+
     if (loading) return <p>Cargando carrito...</p>;
-    if (error) return <p>Error al cargar el carrito.</p>;
-    if (!cart || !cart.items || cart.items.length === 0) {
+    if (error) {
+        console.error('🛒 Error:', error);
+        return <p>Error al cargar el carrito: {error}</p>;
+    }
+    
+    if (!cart) return <p>No hay carrito</p>;
+    
+    const items = cart.items || [];
+    console.log('🛒 Items a mostrar:', items);
+    
+    if (items.length === 0) {
         return <p>Tu carrito está vacío. Agrega productos desde la sección "Productos".</p>;
     }
 
@@ -16,10 +28,13 @@ export default function CartView({ cartId, onCheckout }) {
         if (quantity < 1) return;
         setUpdatingId(cartItemId);
         try {
-            await cartItemApi.actualizar(cartItemId, { quantity });
+            console.log('🔄 Actualizando cantidad:', { cartItemId, quantity });
+            const response = await cartItemApi.actualizar(cartItemId, { quantity });
+            console.log('✅ Respuesta actualizar:', response.data);
             await refetch();
         } catch (err) {
-            alert('Error al actualizar la cantidad');
+            console.error('❌ Error al actualizar cantidad:', err);
+            alert('Error al actualizar la cantidad: ' + (err.response?.data?.message || err.message));
         }
         setUpdatingId(null);
     };
@@ -27,10 +42,12 @@ export default function CartView({ cartId, onCheckout }) {
     const handleRemove = async (cartItemId) => {
         setUpdatingId(cartItemId);
         try {
+            console.log('🗑️ Eliminando item:', cartItemId);
             await cartItemApi.eliminar(cartItemId);
             await refetch();
         } catch (err) {
-            alert('Error al eliminar el producto');
+            console.error('❌ Error al eliminar:', err);
+            alert('Error al eliminar el producto: ' + (err.response?.data?.message || err.message));
         }
         setUpdatingId(null);
     };
@@ -38,7 +55,7 @@ export default function CartView({ cartId, onCheckout }) {
     return (
         <div>
             <h2>Mi Carrito</h2>
-            {cart.items.map((item) => (
+            {items.map((item) => (
                 <div
                     key={item.id}
                     style={{
@@ -52,7 +69,7 @@ export default function CartView({ cartId, onCheckout }) {
                     }}
                 >
                     <div>
-                        <strong>{item.product_name}</strong>
+                        <strong>{item.product_name || 'Producto'}</strong>
                         <p style={{ margin: 0, color: '#666' }}>Precio unitario: ${item.unit_price}</p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -64,7 +81,7 @@ export default function CartView({ cartId, onCheckout }) {
                             onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value, 10) || 1)}
                             style={{ width: '60px', padding: '5px' }}
                         />
-                        <span>Subtotal: ${item.subtotal}</span>
+                        <span>Subtotal: ${item.subtotal || (item.quantity * item.unit_price)}</span>
                         <button
                             onClick={() => handleRemove(item.id)}
                             disabled={updatingId === item.id}
@@ -76,7 +93,7 @@ export default function CartView({ cartId, onCheckout }) {
                 </div>
             ))}
             <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                <h3>Total: ${cart.total}</h3>
+                <h3>Total: ${cart.total || 0}</h3>
                 <button
                     onClick={onCheckout}
                     style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}

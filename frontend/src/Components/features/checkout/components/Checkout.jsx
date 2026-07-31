@@ -14,9 +14,16 @@ export default function Checkout({ cartId, user, onSuccess, onCancel }) {
     const [error, setError] = useState('');
 
     useEffect(() => {
+        console.log('🛒 Checkout - cartId:', cartId);
+        console.log('👤 Checkout - user:', user);
+        
         addressesApi.listar()
             .then((response) => {
-                const mine = (response.data.data || []).filter((a) => a.user_id === user.id);
+                console.log('📦 Respuesta direcciones:', response.data);
+                // Extraer correctamente los datos
+                const allAddresses = response.data.data || response.data || [];
+                const mine = allAddresses.filter((a) => a.user_id === user.id);
+                console.log('📍 Direcciones del usuario:', mine);
                 setAddresses(mine);
                 if (mine.length > 0) {
                     setSelectedAddressId(mine[0].id);
@@ -24,7 +31,10 @@ export default function Checkout({ cartId, user, onSuccess, onCancel }) {
                     setShowNewAddress(true);
                 }
             })
-            .catch(() => setError('Error al cargar tus direcciones'))
+            .catch((err) => {
+                console.error('❌ Error al cargar direcciones:', err);
+                setError('Error al cargar tus direcciones');
+            })
             .finally(() => setLoadingAddresses(false));
     }, [user.id]);
 
@@ -33,27 +43,55 @@ export default function Checkout({ cartId, user, onSuccess, onCancel }) {
         setProcessing(true);
         setError('');
         try {
-            const response = await addressesApi.crear({ ...newAddress, user_id: user.id });
-            setAddresses((prev) => [...prev, response.data]);
-            setSelectedAddressId(response.data.id);
+            console.log('📝 Creando dirección:', { ...newAddress, user_id: user.id });
+            const response = await addressesApi.crear({ 
+                ...newAddress, 
+                user_id: user.id,
+                is_default: true 
+            });
+            console.log('✅ Dirección creada:', response.data);
+            
+            // Extraer correctamente los datos
+            const addressData = response.data.data || response.data;
+            setAddresses((prev) => [...prev, addressData]);
+            setSelectedAddressId(addressData.id);
             setShowNewAddress(false);
         } catch (err) {
+            console.error('❌ Error al guardar dirección:', err);
             setError(err.response?.data?.message || 'Error al guardar la dirección');
         }
         setProcessing(false);
     };
 
     const handleConfirm = async () => {
+        console.log('🛒 Confirmando pedido - cartId:', cartId);
+        console.log('🛒 Confirmando pedido - selectedAddressId:', selectedAddressId);
+        
         if (!selectedAddressId) {
             setError('Selecciona una dirección de envío');
             return;
         }
+        
+        if (!cartId) {
+            setError('No hay carrito seleccionado');
+            return;
+        }
+        
         setProcessing(true);
         setError('');
         try {
-            const response = await checkoutApi.procesar({ cart_id: cartId, address_id: selectedAddressId });
-            onSuccess(response.data);
+            console.log('📦 Enviando checkout:', { cart_id: cartId, address_id: selectedAddressId });
+            const response = await checkoutApi.procesar({ 
+                cart_id: cartId, 
+                address_id: selectedAddressId 
+            });
+            console.log('✅ Pedido creado:', response.data);
+            
+            // Extraer correctamente los datos
+            const orderData = response.data.data || response.data;
+            onSuccess(orderData);
         } catch (err) {
+            console.error('❌ Error al procesar pedido:', err);
             setError(err.response?.data?.message || 'Error al procesar el pedido');
         }
         setProcessing(false);
@@ -143,7 +181,7 @@ export default function Checkout({ cartId, user, onSuccess, onCancel }) {
                         disabled={processing}
                         style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                     >
-                        Guardar dirección
+                        {processing ? 'Guardando...' : 'Guardar dirección'}
                     </button>
                     {addresses.length > 0 && (
                         <button
@@ -167,8 +205,15 @@ export default function Checkout({ cartId, user, onSuccess, onCancel }) {
                     </button>
                     <button
                         onClick={handleConfirm}
-                        disabled={processing || !selectedAddressId}
-                        style={{ padding: '10px 20px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                        disabled={processing || !selectedAddressId || !cartId}
+                        style={{ 
+                            padding: '10px 20px', 
+                            backgroundColor: (processing || !selectedAddressId || !cartId) ? '#ccc' : '#007bff', 
+                            color: 'white', 
+                            border: 'none', 
+                            borderRadius: '4px', 
+                            cursor: (processing || !selectedAddressId || !cartId) ? 'not-allowed' : 'pointer' 
+                        }}
                     >
                         {processing ? 'Procesando...' : 'Confirmar pedido'}
                     </button>

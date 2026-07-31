@@ -1,7 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+﻿import { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '../api/authApi';
 
-export function useAuth() {
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -64,5 +66,17 @@ export function useAuth() {
         fetchUser();
     }, []);
 
-    return { user, loading, error, login, register, logout, fetchUser };
+    return (
+        <AuthContext.Provider value={{ user, loading, error, login, register, logout, fetchUser }}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+export function useAuth() {
+    const context = useContext(AuthContext);
+    if (!context) {
+        throw new Error('useAuth debe usarse dentro de AuthProvider');
+    }
+    return context;
 }

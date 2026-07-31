@@ -1,6 +1,5 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useAuth } from './Components/features/auth/hooks/useAuth';
-import { useCartId } from './Components/features/cart/hooks/useCartId';
 import { cartApi } from './Components/features/cart/api/cartApi';
 import Login from './Components/features/auth/components/Login';
 import Register from './Components/features/auth/components/Register';
@@ -17,10 +16,87 @@ function App() {
   const [showRegister, setShowRegister] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(null);
+  const [cartId, setCartId] = useState(null);
+  const [cartLoading, setCartLoading] = useState(true);
+  const [cartError, setCartError] = useState(null);
   const { user, logout, loading } = useAuth();
-  const { cartId, loading: cartLoading, resetCart } = useCartId(user?.id);
-
   const isAdmin = user?.role === 'admin';
+
+  // FUNCIÓN PARA CREAR/OBTENER CARRITO - VERSIÓN DEFINITIVA
+  const getOrCreateCart = async () => {
+    const token = localStorage.getItem('token');
+    
+    console.log('🔍 getOrCreateCart - token:', token ? 'SÍ' : 'NO');
+    console.log('🔍 getOrCreateCart - user:', user);
+    
+    if (!token || !user?.id) {
+      setCartLoading(false);
+      return;
+    }
+
+    const storageKey = `cart_id_user_${user.id}`;
+    const stored = localStorage.getItem(storageKey);
+
+    if (stored) {
+      console.log('🔍 Usando carrito guardado:', stored);
+      setCartId(Number(stored));
+      setCartLoading(false);
+      setCartError(null);
+      return;
+    }
+
+    setCartLoading(true);
+    setCartError(null);
+
+    try {
+      console.log('🔍 Creando carrito nuevo...');
+      const response = await fetch('http://127.0.0.1:8000/api/carts', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({})
+      });
+      const data = await response.json();
+      console.log('🔍 Respuesta carrito:', data);
+      
+      // Extraer el ID correctamente
+      const cartData = data.data || data;
+      if (cartData.id) {
+        localStorage.setItem(storageKey, String(cartData.id));
+        setCartId(cartData.id);
+        setCartError(null);
+        console.log('✅ Carrito creado con ID:', cartData.id);
+      } else {
+        setCartError('Error al crear carrito: ' + JSON.stringify(data));
+        console.error('❌ Error:', data);
+      }
+    } catch (err) {
+      setCartError('Error: ' + err.message);
+      console.error('❌ Error:', err);
+    } finally {
+      setCartLoading(false);
+    }
+  };
+
+  // Cuando el usuario cambia, obtener carrito
+  useEffect(() => {
+    if (user?.id) {
+      getOrCreateCart();
+    } else {
+      setCartLoading(false);
+      setCartId(null);
+    }
+  }, [user?.id]);
+
+  // Recargar cuando hay error
+  useEffect(() => {
+    if (cartError) {
+      console.log('⚠️ Hay error, mostrando mensaje');
+    }
+  }, [cartError]);
 
   if (loading) {
     return <div style={{ textAlign: 'center', padding: '50px' }}>Cargando...</div>;
@@ -44,7 +120,10 @@ function App() {
           </div>
         ) : (
           <div>
-            <Login onLoginSuccess={() => {}} />
+            <Login onLoginSuccess={() => {
+              // Recargar después del login
+              window.location.reload();
+            }} />
             <p style={{ textAlign: 'center', marginTop: '20px' }}>
               ¿No tienes cuenta?{' '}
               <button
@@ -61,22 +140,43 @@ function App() {
   }
 
   const handleAddToCart = async (product) => {
+    console.log('🛒 Agregando producto:', product.name);
+    console.log('🛒 cartId actual:', cartId);
+    
     if (!cartId) {
-      alert('Tu carrito todavía se está preparando, intenta de nuevo en un momento.');
-      return;
+      if (cartLoading) {
+        alert('Preparando carrito, espera...');
+        return;
+      }
+      // Intentar crear carrito nuevamente
+      await getOrCreateCart();
+      if (!cartId) {
+        alert('Error con el carrito. Intenta de nuevo.');
+        return;
+      }
     }
+
     try {
-      await cartApi.addItem(cartId, { product_id: product.id, quantity: 1 });
+      await cartApi.addItem(cartId, { 
+        product_id: product.id, 
+        quantity: 1 
+      });
       alert(`${product.name} agregado al carrito`);
     } catch (err) {
-      alert(err.response?.data?.message || 'Error al agregar al carrito');
+      console.error('❌ Error:', err);
+      alert(err.response?.data?.message || 'Error al agregar');
     }
   };
 
   const handleCheckoutSuccess = (order) => {
     setOrderConfirmed(order);
     setShowCheckout(false);
-    resetCart();
+    // Limpiar carrito guardado
+    if (user?.id) {
+      localStorage.removeItem(`cart_id_user_${user.id}`);
+    }
+    setCartId(null);
+    getOrCreateCart();
     setSeccion('productos');
   };
 
@@ -102,9 +202,25 @@ function App() {
         </div>
       </div>
 
+      {cartError && (
+        <div style={{ padding: '15px', backgroundColor: '#f8d7da', border: '2px solid #dc3545', borderRadius: '4px', marginBottom: '20px' }}>
+          <strong>⚠️ Error:</strong> {cartError}
+          <br />
+          <button 
+            onClick={() => {
+              setCartError(null);
+              getOrCreateCart();
+            }}
+            style={{ marginTop: '10px', padding: '8px 16px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+          >
+            Reintentar
+          </button>
+        </div>
+      )}
+
       {orderConfirmed && (
         <div style={{ padding: '15px', backgroundColor: '#d4edda', border: '1px solid #28a745', borderRadius: '4px', marginBottom: '20px' }}>
-          ¡Pedido confirmado! Número de orden: <strong>{orderConfirmed.order_number}</strong>. Total: ${orderConfirmed.total}
+          ✅ ¡Pedido confirmado! Número: <strong>{orderConfirmed.order_number}</strong>. Total: ${orderConfirmed.total}
           <button
             onClick={() => setOrderConfirmed(null)}
             style={{ marginLeft: '15px', background: 'none', border: 'none', color: '#155724', cursor: 'pointer', textDecoration: 'underline' }}

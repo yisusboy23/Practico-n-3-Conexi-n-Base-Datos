@@ -18,29 +18,54 @@ class CartController extends Controller
     }
 
     // Crear un nuevo carrito
+    // backend/app/Http/Controllers/Api/CartController.php
+
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'nullable|integer|exists:users,id',
-            'session_id' => 'nullable|string|max:100',
-        ]);
+        $user = $request->user();
+        
+        if (!$user) {
+            return response()->json([
+                'message' => 'Usuario no autenticado'
+            ], 401);
+        }
 
-        $cart = Cart::create($validated);
+        // Buscar carrito activo existente
+        $cart = Cart::where('user_id', $user->id)
+                    ->where('status', 'activo')
+                    ->first();
+
+        if ($cart) {
+            return new CartResource($cart);
+        }
+
+        // Crear nuevo carrito
+        $cart = Cart::create([
+            'user_id' => $user->id,
+            'status' => 'activo'
+        ]);
 
         return new CartResource($cart);
     }
 
     // Agregar un producto al carrito
+// backend/app/Http/Controllers/Api/CartController.php
+
     public function addItem(Request $request, Cart $cart)
     {
+        // Verificar que el carrito pertenece al usuario autenticado
+        if ($cart->user_id !== $request->user()->id) {
+            return response()->json([
+                'message' => 'No tienes permiso para modificar este carrito'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'product_id' => 'required|integer|exists:products,id',
             'quantity' => 'required|integer|min:1',
         ]);
 
         $product = Product::findOrFail($validated['product_id']);
-
-        // Usa el método de negocio definido en tu modelo Cart
         $cart->addItem($product, $validated['quantity']);
 
         return new CartResource($cart->load('items.product'));

@@ -2,8 +2,8 @@
 
 export const brandsApi = {
     listar: (params = {}) => api.get('/brands', { params }),
-    obtener: (id) => api.get(/brands/),
+    obtener: (id) => api.get(`/brands/${id}`),
     crear: (data) => api.post('/brands', data),
-    actualizar: (id, data) => api.put(/brands/, data),
-    eliminar: (id) => api.delete(/brands/),
+    actualizar: (id, data) => api.put(`/brands/${id}`, data),
+    eliminar: (id) => api.delete(`/brands/${id}`),
 };

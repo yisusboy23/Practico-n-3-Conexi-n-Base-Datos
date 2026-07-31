@@ -14,8 +14,14 @@ export function useCart(cartId) {
         try {
             setLoading(true);
             const response = await cartApi.obtener(cartId);
-            setCart(response.data);
+            // 🔴 EL PROBLEMA ESTÁ AQUÍ: response.data contiene {data: {...}}
+            // Tenemos que acceder a response.data.data
+            const cartData = response.data.data || response.data;
+            console.log('🛒 fetchCart - datos:', cartData);
+            setCart(cartData);
+            setError(null);
         } catch (error) {
+            console.error('🛒 Error al cargar carrito:', error);
             setError(error.response?.data?.message || 'Error al cargar el carrito');
         } finally {
             setLoading(false);
@@ -25,7 +31,8 @@ export function useCart(cartId) {
     const addItem = async (productId, quantity) => {
         try {
             const response = await cartApi.addItem(cartId, { product_id: productId, quantity });
-            setCart(response.data);
+            const cartData = response.data.data || response.data;
+            setCart(cartData);
             return { success: true };
         } catch (error) {
             return { success: false, error: error.response?.data?.message };
