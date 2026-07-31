@@ -1,6 +1,76 @@
 import { useState, useEffect } from 'react';
 import { categoriesApi } from '../api/categoriesApi';
 
+const styles = {
+    container: {
+        maxWidth: '500px',
+        margin: '20px 0',
+        padding: '25px',
+        backgroundColor: '#121212',
+        border: '1px solid #2a2a2a',
+        borderRadius: '12px',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.6)',
+        color: '#e0e0e0',
+    },
+    title: {
+        marginTop: 0,
+        marginBottom: '20px',
+        fontSize: '1.4rem',
+        color: '#fff',
+        borderBottom: '2px solid #7b2ffc',
+        paddingBottom: '10px',
+        display: 'inline-block',
+    },
+    input: {
+        width: '100%',
+        padding: '12px',
+        margin: '8px 0 15px 0',
+        backgroundColor: '#0a0a0a',
+        border: '1px solid #333',
+        borderRadius: '8px',
+        color: '#fff',
+        fontSize: '15px',
+        outline: 'none',
+        transition: 'border-color 0.2s',
+        boxSizing: 'border-box',
+    },
+    select: {
+        width: '100%',
+        padding: '12px',
+        margin: '8px 0 15px 0',
+        backgroundColor: '#0a0a0a',
+        border: '1px solid #333',
+        borderRadius: '8px',
+        color: '#fff',
+        fontSize: '15px',
+        outline: 'none',
+    },
+    error: {
+        color: '#ff4d4d',
+        backgroundColor: 'rgba(255, 77, 77, 0.1)',
+        padding: '10px',
+        borderRadius: '8px',
+        marginBottom: '15px',
+        border: '1px solid #ff4d4d',
+    },
+    button: {
+        padding: '12px 25px',
+        backgroundColor: '#28a745',
+        color: 'white',
+        border: 'none',
+        borderRadius: '8px',
+        fontWeight: 'bold',
+        fontSize: '15px',
+        cursor: 'pointer',
+        transition: 'all 0.3s ease',
+        marginTop: '5px',
+    },
+    buttonDisabled: {
+        opacity: 0.6,
+        cursor: 'not-allowed',
+    }
+};
+
 export default function CrearCategoria({ onSuccess }) {
     const [form, setForm] = useState({
         name: '',
@@ -59,9 +129,9 @@ export default function CrearCategoria({ onSuccess }) {
     };
 
     return (
-        <form onSubmit={handleSubmit} style={{ maxWidth: '500px', margin: '20px 0', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
-            <h3>Crear Categoría</h3>
-            {error && <div style={{ color: 'red' }}>{error}</div>}
+        <form onSubmit={handleSubmit} style={styles.container}>
+            <h3 style={styles.title}>Crear Categoría</h3>
+            {error && <div style={styles.error}>{error}</div>}
             
             <input
                 type="text"
@@ -69,7 +139,7 @@ export default function CrearCategoria({ onSuccess }) {
                 value={form.name}
                 onChange={handleNameChange}
                 required
-                style={{ width: '100%', padding: '8px', margin: '5px 0' }}
+                style={styles.input}
             />
             
             <input
@@ -78,13 +148,13 @@ export default function CrearCategoria({ onSuccess }) {
                 value={form.slug}
                 onChange={(e) => setForm({ ...form, slug: e.target.value })}
                 required
-                style={{ width: '100%', padding: '8px', margin: '5px 0' }}
+                style={styles.input}
             />
             
             <select
                 value={form.parent_id}
                 onChange={(e) => setForm({ ...form, parent_id: e.target.value })}
-                style={{ width: '100%', padding: '8px', margin: '5px 0' }}
+                style={styles.select}
             >
                 <option value="">Sin categoría padre</option>
                 {categories.map((cat) => (
@@ -97,7 +167,12 @@ export default function CrearCategoria({ onSuccess }) {
             <button
                 type="submit"
                 disabled={loading}
-                style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                style={{
+                    ...styles.button,
+                    ...(loading ? styles.buttonDisabled : {}),
+                }}
+                onMouseEnter={(e) => !loading && (e.target.style.backgroundColor = '#218838')}
+                onMouseLeave={(e) => !loading && (e.target.style.backgroundColor = '#28a745')}
             >
                 {loading ? 'Creando...' : 'Crear Categoría'}
             </button>

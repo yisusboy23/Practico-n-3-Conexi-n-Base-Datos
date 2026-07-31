@@ -2,6 +2,99 @@ import { useState } from 'react';
 import { useCart } from '../hooks/useCart';
 import { cartItemApi } from '../api/cartItemApi';
 
+const styles = {
+    container: {
+        backgroundColor: '#0a0a0a',
+        color: '#e0e0e0',
+        padding: '20px',
+        borderRadius: '16px',
+        border: '1px solid #2a2a2a',
+        maxWidth: '900px',
+        margin: '20px auto',
+    },
+    title: {
+        fontSize: '1.8rem',
+        marginBottom: '20px',
+        borderBottom: '1px solid #2a2a2a',
+        paddingBottom: '15px',
+    },
+    itemRow: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '15px 0',
+        borderBottom: '1px solid #222',
+        flexWrap: 'wrap',
+        gap: '10px',
+    },
+    itemDetails: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px',
+    },
+    itemName: {
+        fontSize: '1.1rem',
+        fontWeight: '600',
+        color: '#fff',
+    },
+    itemPrice: {
+        color: '#a0a0a0',
+        fontSize: '0.9rem',
+    },
+    quantityInput: {
+        width: '60px',
+        padding: '8px',
+        backgroundColor: '#1a1a1a',
+        border: '1px solid #333',
+        borderRadius: '6px',
+        color: '#fff',
+        textAlign: 'center',
+    },
+    actionBtn: {
+        padding: '8px 16px',
+        border: 'none',
+        borderRadius: '6px',
+        fontWeight: '600',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+    },
+    footer: {
+        marginTop: '25px',
+        textAlign: 'right',
+        borderTop: '1px solid #222',
+        paddingTop: '20px',
+    },
+    total: {
+        fontSize: '1.5rem',
+        fontWeight: '700',
+        color: '#00d4ff',
+        marginBottom: '15px',
+    },
+    checkoutBtn: {
+        padding: '12px 30px',
+        backgroundColor: '#7b2ffc',
+        color: 'white',
+        border: 'none',
+        borderRadius: '8px',
+        fontSize: '1rem',
+        fontWeight: 'bold',
+        cursor: 'pointer',
+        transition: 'all 0.3s',
+        boxShadow: '0 4px 12px rgba(123, 47, 252, 0.4)',
+    },
+    loadingMsg: {
+        textAlign: 'center',
+        padding: '20px',
+        color: '#a0a0a0',
+    },
+    emptyMsg: {
+        textAlign: 'center',
+        padding: '40px',
+        color: '#a0a0a0',
+        fontSize: '1.2rem',
+    }
+};
+
 export default function CartView({ cartId, onCheckout }) {
     const { cart, loading, error, refetch } = useCart(cartId);
     const [updatingId, setUpdatingId] = useState(null);
@@ -9,19 +102,19 @@ export default function CartView({ cartId, onCheckout }) {
     console.log('🛒 CartView - cartId:', cartId);
     console.log('🛒 CartView - cart:', cart);
 
-    if (loading) return <p>Cargando carrito...</p>;
+    if (loading) return <p style={styles.loadingMsg}>Cargando carrito...</p>;
     if (error) {
         console.error('🛒 Error:', error);
-        return <p>Error al cargar el carrito: {error}</p>;
+        return <p style={styles.loadingMsg}>Error al cargar el carrito: {error}</p>;
     }
     
-    if (!cart) return <p>No hay carrito</p>;
+    if (!cart) return <p style={styles.loadingMsg}>No hay carrito</p>;
     
     const items = cart.items || [];
     console.log('🛒 Items a mostrar:', items);
     
     if (items.length === 0) {
-        return <p>Tu carrito está vacío. Agrega productos desde la sección "Productos".</p>;
+        return <p style={styles.emptyMsg}>Tu carrito está vacío. Agrega productos desde la sección "Productos".</p>;
     }
 
     const handleQuantityChange = async (cartItemId, quantity) => {
@@ -53,50 +146,49 @@ export default function CartView({ cartId, onCheckout }) {
     };
 
     return (
-        <div>
-            <h2>Mi Carrito</h2>
+        <div style={styles.container}>
+            <h2 style={styles.title}>Mi Carrito</h2>
             {items.map((item) => (
-                <div
-                    key={item.id}
-                    style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        padding: '10px',
-                        borderBottom: '1px solid #ddd',
-                        flexWrap: 'wrap',
-                        gap: '10px',
-                    }}
-                >
-                    <div>
-                        <strong>{item.product_name || 'Producto'}</strong>
-                        <p style={{ margin: 0, color: '#666' }}>Precio unitario: ${item.unit_price}</p>
+                <div key={item.id} style={styles.itemRow}>
+                    <div style={styles.itemDetails}>
+                        <div style={styles.itemName}>{item.product_name || 'Producto'}</div>
+                        <div style={styles.itemPrice}>Precio unitario: ${item.unit_price}</div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
                         <input
                             type="number"
                             min="1"
                             value={item.quantity}
                             disabled={updatingId === item.id}
                             onChange={(e) => handleQuantityChange(item.id, parseInt(e.target.value, 10) || 1)}
-                            style={{ width: '60px', padding: '5px' }}
+                            style={styles.quantityInput}
                         />
-                        <span>Subtotal: ${item.subtotal || (item.quantity * item.unit_price)}</span>
+                        <span style={{ fontWeight: '500' }}>
+                            Subtotal: ${item.subtotal || (item.quantity * item.unit_price)}
+                        </span>
                         <button
                             onClick={() => handleRemove(item.id)}
                             disabled={updatingId === item.id}
-                            style={{ padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                            style={{
+                                ...styles.actionBtn,
+                                backgroundColor: '#dc3545',
+                                color: 'white'
+                            }}
+                            onMouseEnter={(e) => e.target.style.backgroundColor = '#c82333'}
+                            onMouseLeave={(e) => e.target.style.backgroundColor = '#dc3545'}
                         >
                             Eliminar
                         </button>
                     </div>
                 </div>
             ))}
-            <div style={{ marginTop: '20px', textAlign: 'right' }}>
-                <h3>Total: ${cart.total || 0}</h3>
+            <div style={styles.footer}>
+                <h3 style={styles.total}>Total: ${cart.total || 0}</h3>
                 <button
                     onClick={onCheckout}
-                    style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                    style={styles.checkoutBtn}
+                    onMouseEnter={(e) => {e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 6px 20px rgba(123, 47, 252, 0.6)';}}
+                    onMouseLeave={(e) => {e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 12px rgba(123, 47, 252, 0.4)';}}
                 >
                     Proceder al pago
                 </button>

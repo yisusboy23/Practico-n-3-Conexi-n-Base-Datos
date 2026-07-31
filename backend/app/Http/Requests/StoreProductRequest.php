@@ -18,6 +18,7 @@ class StoreProductRequest extends FormRequest
             'brand_id'    => 'required|exists:brands,id',
             'sku'         => 'required|string|max:50|unique:products,sku',
             'name'        => 'required|string|max:200',
+            'slug'        => 'nullable|string|max:255|unique:products,slug', // Opcional desde el Request, el modelo lo autogenera
             'description' => 'nullable|string',
             'price'       => 'required|numeric|min:0',
             'stock'       => 'required|integer|min:0',
