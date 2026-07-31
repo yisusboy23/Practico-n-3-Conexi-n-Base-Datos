@@ -11,13 +11,21 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index()
+        public function index(Request $request)
     {
-        return UserResource::collection(
-            User::paginate(15)
-        );
-    }
+        $perPage = $request->input('per_page', 15);
+        $page = $request->input('page', 1);
 
+        $users = User::paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data' => UserResource::collection($users),
+            'current_page' => $users->currentPage(),
+            'last_page' => $users->lastPage(),
+            'per_page' => $users->perPage(),
+            'total' => $users->total(),
+        ]);
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

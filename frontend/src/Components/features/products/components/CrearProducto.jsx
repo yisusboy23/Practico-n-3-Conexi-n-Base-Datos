@@ -1,5 +1,7 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { productsApi } from '../api/productsApi';
+import { categoriesApi } from '../../categories/api/categoriesApi';
+import { brandsApi } from '../../brands/api/brandsApi';
 
 export default function CrearProducto({ onSuccess }) {
     const [form, setForm] = useState({
@@ -13,6 +15,29 @@ export default function CrearProducto({ onSuccess }) {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [categorias, setCategorias] = useState([]);
+    const [marcas, setMarcas] = useState([]);
+    const [cargandoDatos, setCargandoDatos] = useState(true);
+
+    // Cargar categorías y marcas al montar el componente
+    useEffect(() => {
+        const cargarDatos = async () => {
+            try {
+                const [categoriasRes, marcasRes] = await Promise.all([
+                    categoriesApi.listar(),
+                    brandsApi.listar()
+                ]);
+                setCategorias(categoriasRes.data.data || []);
+                setMarcas(marcasRes.data.data || []);
+            } catch (err) {
+                console.error('Error al cargar datos:', err);
+                setError('Error al cargar categorías y marcas');
+            } finally {
+                setCargandoDatos(false);
+            }
+        };
+        cargarDatos();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -21,7 +46,7 @@ export default function CrearProducto({ onSuccess }) {
         try {
             const response = await productsApi.crear(form);
             if (onSuccess) onSuccess(response.data);
-            alert('Producto creado exitosamente!');
+            alert('✅ Producto creado exitosamente!');
             setForm({ name: '', sku: '', price: '', stock: '', category_id: '', brand_id: '', description: '' });
         } catch (err) {
             setError(err.response?.data?.message || 'Error al crear producto');
@@ -29,18 +54,123 @@ export default function CrearProducto({ onSuccess }) {
         setLoading(false);
     };
 
+    if (cargandoDatos) {
+        return <p>Cargando categorías y marcas...</p>;
+    }
+
     return (
         <form onSubmit={handleSubmit} style={{ maxWidth: '500px', margin: '20px 0', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
             <h3>Crear Producto</h3>
-            {error && <div style={{ color: 'red' }}>{error}</div>}
-            <input type="text" name="name" placeholder="Nombre" value={form.name} onChange={(e) => setForm({...form, name: e.target.value})} required style={{ width: '100%', padding: '8px', margin: '5px 0' }} />
-            <input type="text" name="sku" placeholder="SKU" value={form.sku} onChange={(e) => setForm({...form, sku: e.target.value})} required style={{ width: '100%', padding: '8px', margin: '5px 0' }} />
-            <input type="number" name="price" placeholder="Precio" value={form.price} onChange={(e) => setForm({...form, price: e.target.value})} required style={{ width: '100%', padding: '8px', margin: '5px 0' }} />
-            <input type="number" name="stock" placeholder="Stock" value={form.stock} onChange={(e) => setForm({...form, stock: e.target.value})} required style={{ width: '100%', padding: '8px', margin: '5px 0' }} />
-            <input type="number" name="category_id" placeholder="ID Categoría" value={form.category_id} onChange={(e) => setForm({...form, category_id: e.target.value})} required style={{ width: '100%', padding: '8px', margin: '5px 0' }} />
-            <input type="number" name="brand_id" placeholder="ID Marca" value={form.brand_id} onChange={(e) => setForm({...form, brand_id: e.target.value})} required style={{ width: '100%', padding: '8px', margin: '5px 0' }} />
-            <textarea name="description" placeholder="Descripción" value={form.description} onChange={(e) => setForm({...form, description: e.target.value})} style={{ width: '100%', padding: '8px', margin: '5px 0', minHeight: '80px' }} />
-            <button type="submit" disabled={loading} style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>{loading ? 'Creando...' : 'Crear Producto'}</button>
+            {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
+            
+            <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Nombre</label>
+                <input
+                    type="text"
+                    placeholder="Nombre del producto"
+                    value={form.name}
+                    onChange={(e) => setForm({...form, name: e.target.value})}
+                    required
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>SKU</label>
+                <input
+                    type="text"
+                    placeholder="Código SKU"
+                    value={form.sku}
+                    onChange={(e) => setForm({...form, sku: e.target.value})}
+                    required
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Precio</label>
+                <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Precio"
+                    value={form.price}
+                    onChange={(e) => setForm({...form, price: e.target.value})}
+                    required
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Stock</label>
+                <input
+                    type="number"
+                    placeholder="Cantidad en stock"
+                    value={form.stock}
+                    onChange={(e) => setForm({...form, stock: e.target.value})}
+                    required
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                />
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Categoría</label>
+                <select
+                    value={form.category_id}
+                    onChange={(e) => setForm({...form, category_id: e.target.value})}
+                    required
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                    <option value="">Seleccionar categoría</option>
+                    {categorias.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                            {cat.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Marca</label>
+                <select
+                    value={form.brand_id}
+                    onChange={(e) => setForm({...form, brand_id: e.target.value})}
+                    required
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
+                >
+                    <option value="">Seleccionar marca</option>
+                    {marcas.map((marca) => (
+                        <option key={marca.id} value={marca.id}>
+                            {marca.name}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
+            <div style={{ marginBottom: '10px' }}>
+                <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Descripción</label>
+                <textarea
+                    placeholder="Descripción del producto"
+                    value={form.description}
+                    onChange={(e) => setForm({...form, description: e.target.value})}
+                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px', minHeight: '80px' }}
+                />
+            </div>
+
+            <button
+                type="submit"
+                disabled={loading}
+                style={{ 
+                    width: '100%', 
+                    padding: '10px', 
+                    backgroundColor: '#28a745', 
+                    color: 'white', 
+                    border: 'none', 
+                    borderRadius: '4px', 
+                    cursor: loading ? 'not-allowed' : 'pointer' 
+                }}
+            >
+                {loading ? 'Creando...' : 'Crear Producto'}
+            </button>
         </form>
     );
 }

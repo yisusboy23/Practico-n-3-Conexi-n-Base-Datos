@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index(Request $request)
+        public function index(Request $request)
     {
         $query = Product::with(['category', 'brand', 'images']);
 
@@ -33,11 +33,19 @@ class ProductController extends Controller
             $query->where('price', '<=', $request->max_price);
         }
 
-        return ProductResource::collection(
-            $query->paginate(10)
-        );
-    }
+        $perPage = $request->input('per_page', 10);
+        $page = $request->input('page', 1);
 
+        $products = $query->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json([
+            'data' => ProductResource::collection($products),
+            'current_page' => $products->currentPage(),
+            'last_page' => $products->lastPage(),
+            'per_page' => $products->perPage(),
+            'total' => $products->total(),
+        ]);
+    }
     public function store(Request $request)
     {
         $validated = $request->validate([

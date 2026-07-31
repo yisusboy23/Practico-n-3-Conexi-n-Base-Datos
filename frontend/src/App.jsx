@@ -176,6 +176,7 @@ function App() {
       setFiltroCategoria(null); // Limpiar filtro de categoría
       setSeccion('productos');
   };
+  
   const handleSeleccionarCategoria = (categoria) => {
       console.log('📂 Categoría seleccionada:', categoria);
       setFiltroCategoria(categoria.id);
@@ -204,7 +205,7 @@ function App() {
   return (
     <div style={{ padding: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>Tienda Tecnologica</h1>
+        <h1>Tienda Tecnológica</h1>
         <div>
           <span style={{ marginRight: '15px' }}>
             {user.name}
@@ -218,7 +219,7 @@ function App() {
             onClick={logout}
             style={{ padding: '8px 16px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
           >
-            Cerrar Sesion
+            Cerrar Sesión
           </button>
         </div>
       </div>
@@ -276,7 +277,7 @@ function App() {
             cursor: 'pointer',
           }}
         >
-          Categorias
+          Categorías
         </button>
         <button
           onClick={() => setSeccion('marcas')}
@@ -323,37 +324,40 @@ function App() {
       </nav>
 
       {seccion === 'productos' && (
-          <div>
-              {/* Mostrar filtros activos */}
-              {(filtroCategoria || filtroMarca) && (
-                  <div style={{ marginBottom: '15px' }}>
-                      <span style={{ backgroundColor: '#e9ecef', padding: '5px 10px', borderRadius: '4px' }}>
-                          {filtroCategoria ? '📂 Categoría filtrada' : '🏷️ Marca filtrada'}
-                      </span>
-                      <button 
-                          onClick={limpiarFiltros}
-                          style={{ marginLeft: '10px', padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-                      >
-                          ✕ Limpiar filtro
-                      </button>
-                  </div>
-              )}
-              <ListaProductos
-                  filtros={{
-                      category_id: filtroCategoria,
-                      brand_id: filtroMarca
-                  }}
-                  onSeleccionarProducto={(p) => console.log('Producto:', p)}
-                  onAddToCart={handleAddToCart}
-              />
-          </div>
+        <div>
+          {/* Mostrar filtros activos */}
+          {(filtroCategoria || filtroMarca) && (
+            <div style={{ marginBottom: '15px' }}>
+              <span style={{ backgroundColor: '#e9ecef', padding: '5px 10px', borderRadius: '4px' }}>
+                {filtroCategoria ? '📂 Categoría filtrada' : '🏷️ Marca filtrada'}
+              </span>
+              <button 
+                onClick={limpiarFiltros}
+                style={{ marginLeft: '10px', padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                ✕ Limpiar filtro
+              </button>
+            </div>
+          )}
+          <ListaProductos
+            filtros={{
+              category_id: filtroCategoria,
+              brand_id: filtroMarca
+            }}
+            onSeleccionarProducto={(p) => console.log('Producto:', p)}
+            onAddToCart={handleAddToCart}
+          />
+        </div>
       )}
+      
       {seccion === 'categorias' && (
-    <ListaCategorias onSeleccionarCategoria={handleSeleccionarCategoria} />
+        <ListaCategorias onSeleccionarCategoria={handleSeleccionarCategoria} />
       )}
+      
       {seccion === 'marcas' && (
-          <ListaMarcas onSeleccionarMarca={handleSeleccionarMarca} />
+        <ListaMarcas onSeleccionarMarca={handleSeleccionarMarca} />
       )}
+      
       {seccion === 'carrito' && (
         cartLoading ? (
           <p>Preparando tu carrito...</p>
@@ -368,6 +372,7 @@ function App() {
           <CartView cartId={cartId} onCheckout={() => setShowCheckout(true)} />
         )
       )}
+      
       {seccion === 'admin' && isAdmin && <AdminPanel />}
     </div>
   );

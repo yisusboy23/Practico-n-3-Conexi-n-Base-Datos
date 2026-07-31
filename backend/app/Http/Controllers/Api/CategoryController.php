@@ -12,7 +12,7 @@ class CategoryController extends Controller
     public function index()
     {
         return CategoryResource::collection(
-            Category::with('parent.parent.parent')->paginate(15)
+            Category::with('parent.parent.parent')->paginate(100)
         );
     }
 

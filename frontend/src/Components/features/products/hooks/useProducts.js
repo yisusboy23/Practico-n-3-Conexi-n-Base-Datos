@@ -5,18 +5,27 @@ export function useProducts(filtros = {}) {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [pagination, setPagination] = useState(null);
 
     // Filtrar solo los parámetros que tienen valor
     const filtrosActivos = {};
     if (filtros.category_id) filtrosActivos.category_id = filtros.category_id;
     if (filtros.brand_id) filtrosActivos.brand_id = filtros.brand_id;
     if (filtros.search) filtrosActivos.search = filtros.search;
+    if (filtros.page) filtrosActivos.page = filtros.page;
 
     const fetchProducts = useCallback(() => {
         setLoading(true);
         productsApi.listar(filtrosActivos)
             .then((response) => {
+                console.log('📦 Respuesta productos:', response.data);
                 setProducts(response.data.data || []);
+                setPagination({
+                    current_page: response.data.current_page || 1,
+                    last_page: response.data.last_page || 1,
+                    per_page: response.data.per_page || 10,
+                    total: response.data.total || 0,
+                });
                 setLoading(false);
             })
             .catch((err) => {
@@ -30,5 +39,5 @@ export function useProducts(filtros = {}) {
         fetchProducts();
     }, [fetchProducts]);
 
-    return { products, loading, error, refetch: fetchProducts };
+    return { products, loading, error, refetch: fetchProducts, pagination };
 }
