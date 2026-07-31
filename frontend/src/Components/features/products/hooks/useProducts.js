@@ -6,20 +6,25 @@ export function useProducts(filtros = {}) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const filtrosKey = JSON.stringify(filtros);
+    // Filtrar solo los parámetros que tienen valor
+    const filtrosActivos = {};
+    if (filtros.category_id) filtrosActivos.category_id = filtros.category_id;
+    if (filtros.brand_id) filtrosActivos.brand_id = filtros.brand_id;
+    if (filtros.search) filtrosActivos.search = filtros.search;
 
     const fetchProducts = useCallback(() => {
         setLoading(true);
-        productsApi.listar(filtros)
+        productsApi.listar(filtrosActivos)
             .then((response) => {
                 setProducts(response.data.data || []);
                 setLoading(false);
             })
             .catch((err) => {
+                console.error('❌ Error al cargar productos:', err);
                 setError(err);
                 setLoading(false);
             });
-    }, [filtrosKey]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [JSON.stringify(filtrosActivos)]);
 
     useEffect(() => {
         fetchProducts();

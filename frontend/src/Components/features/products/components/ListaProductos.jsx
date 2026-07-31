@@ -1,8 +1,8 @@
 ﻿import { useState } from 'react';
 import { useProducts } from '../hooks/useProducts';
 
-export default function ListaProductos({ onSeleccionarProducto, onAddToCart }) {
-    const { products, loading, error } = useProducts();
+export default function ListaProductos({ onSeleccionarProducto, onAddToCart, filtros = {} }) {
+    const { products, loading, error } = useProducts(filtros);
     const [addingId, setAddingId] = useState(null);
 
     if (loading) return <p>Cargando productos...</p>;

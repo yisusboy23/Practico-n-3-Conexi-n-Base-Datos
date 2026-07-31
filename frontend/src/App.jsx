@@ -13,6 +13,8 @@ import './App.css';
 
 function App() {
   const [seccion, setSeccion] = useState('productos');
+  const [filtroCategoria, setFiltroCategoria] = useState(null);
+  const [filtroMarca, setFiltroMarca] = useState(null); 
   const [showRegister, setShowRegister] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [orderConfirmed, setOrderConfirmed] = useState(null);
@@ -168,6 +170,25 @@ function App() {
     }
   };
 
+  const handleSeleccionarMarca = (marca) => {
+      console.log('🏷️ Marca seleccionada:', marca);
+      setFiltroMarca(marca.id);
+      setFiltroCategoria(null); // Limpiar filtro de categoría
+      setSeccion('productos');
+  };
+  const handleSeleccionarCategoria = (categoria) => {
+      console.log('📂 Categoría seleccionada:', categoria);
+      setFiltroCategoria(categoria.id);
+      setFiltroMarca(null);
+      setSeccion('productos');
+  };
+
+  // Limpiar filtros
+  const limpiarFiltros = () => {
+      setFiltroCategoria(null);
+      setFiltroMarca(null);
+  };
+
   const handleCheckoutSuccess = (order) => {
     setOrderConfirmed(order);
     setShowCheckout(false);
@@ -302,16 +323,36 @@ function App() {
       </nav>
 
       {seccion === 'productos' && (
-        <ListaProductos
-          onSeleccionarProducto={(p) => console.log('Producto:', p)}
-          onAddToCart={handleAddToCart}
-        />
+          <div>
+              {/* Mostrar filtros activos */}
+              {(filtroCategoria || filtroMarca) && (
+                  <div style={{ marginBottom: '15px' }}>
+                      <span style={{ backgroundColor: '#e9ecef', padding: '5px 10px', borderRadius: '4px' }}>
+                          {filtroCategoria ? '📂 Categoría filtrada' : '🏷️ Marca filtrada'}
+                      </span>
+                      <button 
+                          onClick={limpiarFiltros}
+                          style={{ marginLeft: '10px', padding: '5px 10px', backgroundColor: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                          ✕ Limpiar filtro
+                      </button>
+                  </div>
+              )}
+              <ListaProductos
+                  filtros={{
+                      category_id: filtroCategoria,
+                      brand_id: filtroMarca
+                  }}
+                  onSeleccionarProducto={(p) => console.log('Producto:', p)}
+                  onAddToCart={handleAddToCart}
+              />
+          </div>
       )}
       {seccion === 'categorias' && (
-        <ListaCategorias onSeleccionarCategoria={(c) => console.log('Categoria:', c)} />
+    <ListaCategorias onSeleccionarCategoria={handleSeleccionarCategoria} />
       )}
       {seccion === 'marcas' && (
-        <ListaMarcas onSeleccionarMarca={(m) => console.log('Marca:', m)} />
+          <ListaMarcas onSeleccionarMarca={handleSeleccionarMarca} />
       )}
       {seccion === 'carrito' && (
         cartLoading ? (
