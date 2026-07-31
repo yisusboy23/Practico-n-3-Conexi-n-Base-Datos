@@ -1,10 +1,26 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useProducts } from '../hooks/useProducts';
 
 export default function ListaProductos({ onSeleccionarProducto, onAddToCart, filtros = {} }) {
     const [page, setPage] = useState(1);
-    const { products, loading, error, pagination, refetch } = useProducts({ ...filtros, page });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchInput, setSearchInput] = useState('');
+    const { products, loading, error, pagination, refetch } = useProducts({ 
+        ...filtros, 
+        page,
+        search: searchTerm 
+    });
     const [addingId, setAddingId] = useState(null);
+
+    // Buscar cuando el usuario escribe (con debounce)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSearchTerm(searchInput);
+            setPage(1); // Resetear a página 1 al buscar
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchInput]);
 
     if (loading) return <p>Cargando productos...</p>;
     if (error) return <p>Error: {error.message}</p>;
@@ -20,6 +36,49 @@ export default function ListaProductos({ onSeleccionarProducto, onAddToCart, fil
 
     return (
         <div>
+            {/* BARRA DE BÚSQUEDA */}
+            <div style={{ marginBottom: '20px', display: 'flex', gap: '10px' }}>
+                <input
+                    type="text"
+                    placeholder="🔍 Buscar productos por nombre..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    style={{
+                        flex: 1,
+                        padding: '10px 15px',
+                        borderRadius: '8px',
+                        border: '1px solid #ddd',
+                        fontSize: '16px',
+                    }}
+                />
+                {searchInput && (
+                    <button
+                        onClick={() => {
+                            setSearchInput('');
+                            setSearchTerm('');
+                            setPage(1);
+                        }}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        ✕ Limpiar
+                    </button>
+                )}
+            </div>
+
+            {/* CONTADOR DE RESULTADOS */}
+            {pagination?.total !== undefined && (
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                    {pagination.total} productos encontrados
+                </p>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
                 {products.map((product) => (
                     <div
@@ -61,6 +120,12 @@ export default function ListaProductos({ onSeleccionarProducto, onAddToCart, fil
                     </div>
                 ))}
             </div>
+
+            {products.length === 0 && !loading && (
+                <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                    No se encontraron productos que coincidan con tu búsqueda
+                </p>
+            )}
 
             {/* PAGINACIÓN */}
             {totalPages > 1 && (

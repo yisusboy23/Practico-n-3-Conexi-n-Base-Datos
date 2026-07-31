@@ -9,14 +9,30 @@ use Illuminate\Http\Request;
 
 class BrandController extends Controller
 {
-    public function index()
+    public function index(Request $request) // ✅ AGREGAR $request
     {
-        return BrandResource::collection(
-            Brand::paginate(50)
-        );
+        $query = Brand::query();
+
+        // 🔍 BÚSQUEDA POR NOMBRE
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $perPage = $request->input('per_page', 15);
+        $page = $request->input('page', 1);
+
+        $brands = $query->paginate($perPage, ['*'], 'page', $page);
+
+        // ✅ DEVOLVER PAGINACIÓN COMPLETA
+        return response()->json([
+            'data' => BrandResource::collection($brands),
+            'current_page' => $brands->currentPage(),
+            'last_page' => $brands->lastPage(),
+            'per_page' => $brands->perPage(),
+            'total' => $brands->total(),
+        ]);
     }
 
-    // Crear una nueva marca
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -30,13 +46,11 @@ class BrandController extends Controller
         return new BrandResource($brand);
     }
 
-    // Mostrar una marca específica
     public function show(Brand $brand)
     {
         return new BrandResource($brand);
     }
 
-    // Actualizar una marca existente
     public function update(Request $request, Brand $brand)
     {
         $validated = $request->validate([
@@ -50,7 +64,6 @@ class BrandController extends Controller
         return new BrandResource($brand);
     }
 
-    // Eliminar una marca
     public function destroy(Brand $brand)
     {
         $brand->delete();

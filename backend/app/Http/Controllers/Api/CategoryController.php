@@ -2,21 +2,37 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller; // <-- IMPORTANTE: Agregar esta línea
+use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Http\Resources\CategoryResource;
 use Illuminate\Http\Request;
 
 class CategoryController extends Controller
 {
-    public function index()
+    public function index(Request $request) // ✅ AGREGAR $request
     {
-        return CategoryResource::collection(
-            Category::with('parent.parent.parent')->paginate(100)
-        );
+        $query = Category::with('parent.parent.parent');
+
+        // 🔍 BÚSQUEDA POR NOMBRE
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        $perPage = $request->input('per_page', 15);
+        $page = $request->input('page', 1);
+
+        $categories = $query->paginate($perPage, ['*'], 'page', $page);
+
+        // ✅ DEVOLVER PAGINACIÓN COMPLETA
+        return response()->json([
+            'data' => CategoryResource::collection($categories),
+            'current_page' => $categories->currentPage(),
+            'last_page' => $categories->lastPage(),
+            'per_page' => $categories->perPage(),
+            'total' => $categories->total(),
+        ]);
     }
 
-    // Crear (POST /categories)
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -30,13 +46,11 @@ class CategoryController extends Controller
         return new CategoryResource($category);
     }
 
-    // Mostrar uno solo (GET /categories/{category})
     public function show(Category $category)
     {
         return new CategoryResource($category);
     }
 
-    // Editar / Actualizar (PUT /categories/{category})
     public function update(Request $request, Category $category)
     {
         $validated = $request->validate([
@@ -50,7 +64,6 @@ class CategoryController extends Controller
         return new CategoryResource($category);
     }
 
-    // Eliminar (DELETE /categories/{category})
     public function destroy(Category $category)
     {
         $category->delete();

@@ -1,4 +1,4 @@
-﻿import { useState } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useProducts } from '../hooks/useProducts';
 import { productsApi } from '../api/productsApi';
 import CrearProducto from './CrearProducto';
@@ -6,10 +6,25 @@ import EditarProducto from './EditarProducto';
 
 export default function ListaProductosAdmin() {
     const [page, setPage] = useState(1);
-    const { products, loading, error, refetch, pagination } = useProducts({ page });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchInput, setSearchInput] = useState('');
+    const { products, loading, error, refetch, pagination } = useProducts({ 
+        page,
+        search: searchTerm 
+    });
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showCreate, setShowCreate] = useState(false);
     const [showEdit, setShowEdit] = useState(false);
+
+    // Buscar cuando el usuario escribe (con debounce)
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setSearchTerm(searchInput);
+            setPage(1);
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [searchInput]);
 
     const handleDelete = async (id) => {
         if (window.confirm('¿Seguro que quieres eliminar este producto?')) {
@@ -30,9 +45,46 @@ export default function ListaProductosAdmin() {
 
     return (
         <div>
-            <button onClick={() => setShowCreate(!showCreate)} style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', marginBottom: '20px' }}>
-                {showCreate ? 'Cancelar' : '+ Crear Producto'}
-            </button>
+            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                <button onClick={() => setShowCreate(!showCreate)} style={{ padding: '10px 20px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                    {showCreate ? 'Cancelar' : '+ Crear Producto'}
+                </button>
+
+                {/* BARRA DE BÚSQUEDA */}
+                <input
+                    type="text"
+                    placeholder="🔍 Buscar productos por nombre..."
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    style={{
+                        flex: 1,
+                        padding: '10px 15px',
+                        borderRadius: '8px',
+                        border: '1px solid #ddd',
+                        fontSize: '16px',
+                        minWidth: '200px',
+                    }}
+                />
+                {searchInput && (
+                    <button
+                        onClick={() => {
+                            setSearchInput('');
+                            setSearchTerm('');
+                            setPage(1);
+                        }}
+                        style={{
+                            padding: '10px 20px',
+                            backgroundColor: '#dc3545',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        ✕ Limpiar
+                    </button>
+                )}
+            </div>
 
             {showCreate && <CrearProducto onSuccess={() => { refetch(); setShowCreate(false); }} />}
 
@@ -41,6 +93,12 @@ export default function ListaProductosAdmin() {
                     productId={selectedProduct.id} 
                     onSuccess={() => { refetch(); setShowEdit(false); setSelectedProduct(null); }} 
                 />
+            )}
+
+            {pagination?.total !== undefined && (
+                <p style={{ marginBottom: '15px', color: '#666' }}>
+                    {pagination.total} productos encontrados
+                </p>
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px' }}>
@@ -58,6 +116,12 @@ export default function ListaProductosAdmin() {
                     </div>
                 ))}
             </div>
+
+            {products.length === 0 && !loading && (
+                <p style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                    No se encontraron productos que coincidan con tu búsqueda
+                </p>
+            )}
 
             {/* PAGINACIÓN */}
             {totalPages > 1 && (
